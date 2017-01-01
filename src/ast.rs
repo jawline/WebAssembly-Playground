@@ -45,7 +45,7 @@ impl AST {
 					Int32 => Type::Int32
 				}
 			},
-			&AST::Function(ref name, ref params, ref body) => {
+			&AST::Function(_, _, ref body) => {
 				body.as_t()
 			},
 			&AST::BinaryOp(ref op, ref left, ref right) =>
