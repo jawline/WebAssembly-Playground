@@ -4,17 +4,21 @@
 <body>
 	<script>
 
+		var i;
+
+		function instantiate(bytes, imports) {
+		  return WebAssembly.compile(bytes).then(m => new WebAssembly.Instance(m, imports));
+		}
+
 		var oReq = new XMLHttpRequest();
-		oReq.open("GET", "/myfile.png", true);
+		oReq.open("GET", "/test.wasm", true);
 		oReq.responseType = "arraybuffer";
 
 		oReq.onload = function (oEvent) {
 		  var arrayBuffer = oReq.response; // Note: not oReq.responseText
 		  if (arrayBuffer) {
 		    var byteArray = new Uint8Array(arrayBuffer);
-		    for (var i = 0; i < byteArray.byteLength; i++) {
-		      // do something with each byte in the array
-		    }
+		    instantiate(byteArray, {}).then(j => i = j);
 		  }
 		};
 

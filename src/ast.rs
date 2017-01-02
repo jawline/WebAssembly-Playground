@@ -63,7 +63,9 @@ impl AST {
 				},
 			&AST::Function(ref name, ref params, ref body) => {
 
-				let mut prelude = "(func $".to_string();
+				let mut prelude;
+				prelude = " (export \"".to_string() + name + "\" $" + name + ") "; 
+				prelude += "(func $";
 				prelude += &(name.to_string() + " ");
 				let plen = params.len();
 

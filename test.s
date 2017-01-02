@@ -1,2 +1,2 @@
 (module 
-(func $hi (result i32) (i32.const 5)))
+ (export "hi" $hi) (func $hi (result i32) (i32.const 5)))
