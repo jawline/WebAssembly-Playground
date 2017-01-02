@@ -1,7 +1,7 @@
 use ast::*;
 use regex::Regex;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function,
 	LParen, RParen,
@@ -9,6 +9,18 @@ enum Token {
 	Plus, Minus, Multiply, Divide,
 	ID(String),
 	Number(i32)
+}
+
+impl Token {
+	fn op(&self) -> Option<BinaryOperation> {
+		match *self {
+			Token::Plus => Some(BinaryOperation::Add),
+			Token::Minus => Some(BinaryOperation::Subtract),
+			Token::Multiply => Some(BinaryOperation::Multiply),
+			Token::Divide => Some(BinaryOperation::Divide),
+			_ => None
+		}
+	}
 }
 
 fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
@@ -95,14 +107,16 @@ fn parse_atom(cur: &mut String) -> Result<AST, String> {
 
 fn parse_expr(cur: &mut String) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur));
+	let peek = try!(tok(cur, true));
 
-	if try!(tok(cur, true)) == Token::Plus {
-		//Discard the peeked token
-		try!(tok(cur, false));
-		let e2 = try!(parse_expr(cur));
-		Ok(AST::add(Box::new(a1), Box::new(e2)))
-	} else {
-		Ok(a1)
+	match peek {
+		Token::Plus | Token::Minus => {
+			//Discard the peeked token
+			try!(tok(cur, false));
+			let e2 = try!(parse_expr(cur));
+			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(e2)))
+		},
+		_ => Ok(a1)
 	}
 }
 
