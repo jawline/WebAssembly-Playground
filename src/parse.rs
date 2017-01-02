@@ -6,7 +6,7 @@ enum Token {
 	Function,
 	LParen, RParen,
 	LBrace, RBrace,
-	Plus, Minus, Multiply, Divide,
+	Plus, Minus, Multiply, Divide, Mod,
 	ID(String),
 	Number(i32)
 }
@@ -18,6 +18,7 @@ impl Token {
 			Token::Minus => Some(BinaryOperation::Subtract),
 			Token::Multiply => Some(BinaryOperation::Multiply),
 			Token::Divide => Some(BinaryOperation::Divide),
+			Token::Mod => Some(BinaryOperation::Mod),
 			_ => None
 		}
 	}
@@ -46,6 +47,11 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 			*cur = cur.trim()[1..].to_string();
 		}
 		Ok(Token::Plus)
+	} else if cur.trim().starts_with("%") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Mod)
 	} else if cur.trim().starts_with("-") {
 		if !peek {
 			*cur = cur.trim()[1..].to_string();
@@ -110,7 +116,7 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 	let peek = try!(tok(cur, true));
 
 	match peek {
-		Token::Plus | Token::Minus => {
+		Token::Plus | Token::Minus | Token::Multiply | Token::Divide | Token::Mod => {
 			//Discard the peeked token
 			try!(tok(cur, false));
 			let e2 = try!(parse_expr(cur));
