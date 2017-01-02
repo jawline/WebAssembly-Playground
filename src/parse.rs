@@ -6,6 +6,7 @@ enum Token {
 	Function,
 	LParen, RParen,
 	LBrace, RBrace,
+	Plus,
 	ID(String),
 	Number(i32)
 }
@@ -28,6 +29,11 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 			*cur = cur.trim()[1..].to_string();
 		}
 		Ok(Token::RParen)
+	} else if cur.trim().starts_with("+") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Plus)
 	} else if cur.trim().starts_with("{") {
 		
 		if !peek {
@@ -63,13 +69,25 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	}
 }
 
-fn parse_expr(cur: &mut String) -> Result<AST, String> {
+fn parse_atom(cur: &mut String) -> Result<AST, String> {
 	let n1 = try!(tok(cur, false));
-
 	if let Token::Number(n) = n1 {
 		Ok(AST::lit(n))
 	} else {
 		Err(("unexpected token near ".to_string() + &cur).to_string())
+	}
+}
+
+fn parse_expr(cur: &mut String) -> Result<AST, String> {
+	let a1 = try!(parse_atom(cur));
+
+	if try!(tok(cur, true)) == Token::Plus {
+		//Discard the peeked token
+		try!(tok(cur, false));
+		let e2 = try!(parse_expr(cur));
+		Ok(AST::add(Box::new(a1), Box::new(e2)))
+	} else {
+		Ok(a1)
 	}
 }
 

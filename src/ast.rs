@@ -19,7 +19,18 @@ impl ToString for Type {
 
 #[derive(Clone, Copy)]
 pub enum BinaryOperation {
-	Add
+	Add, Subtract, Multiply, Divide
+}
+
+impl BinaryOperation {
+	fn instr(&self) -> String {
+		match *self {
+			BinaryOperation::Add => "add",
+			BinaryOperation::Subtract => "sub",
+			BinaryOperation::Multiply => "mul",
+			BinaryOperation::Divide => "div"
+		}.to_string()
+	}
 }
 
 pub enum AST {
@@ -34,8 +45,8 @@ impl AST {
 		AST::Literal(Constant::Int32(x))
 	}
 
-	pub fn add(l: Box<AST>, r: Box<AST>) -> Box<AST> {
-		Box::new(AST::BinaryOp(BinaryOperation::Add, l, r))
+	pub fn add(l: Box<AST>, r: Box<AST>) -> AST {
+		AST::BinaryOp(BinaryOperation::Add, l, r)
 	}
 
 	pub fn as_t(&self) -> Type {
@@ -78,12 +89,7 @@ impl AST {
 				prelude += ")";
 				prelude
 			},
-			&AST::BinaryOp(ref op, ref left, ref right) =>
-				match op {
-					Add => {
-						("(".to_string() + &left.as_t().to_string() + ".add " + &left.as_s() + " " + &right.as_s() + ")").to_string()
-					}
-				}
+			&AST::BinaryOp(ref op, ref left, ref right) => ("(".to_string() + &left.as_t().to_string() + "." + &op.instr() + " " + &left.as_s() + " " + &right.as_s() + ")").to_string()
 		}
 	}
 }
