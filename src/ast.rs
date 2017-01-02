@@ -30,8 +30,8 @@ pub enum AST {
 
 impl AST {
 
-	pub fn lit(x: i32) -> Box<AST> {
-		Box::new(AST::Literal(Constant::Int32(x)))
+	pub fn lit(x: i32) -> AST {
+		AST::Literal(Constant::Int32(x))
 	}
 
 	pub fn add(l: Box<AST>, r: Box<AST>) -> Box<AST> {

@@ -8,7 +8,7 @@ fn main() {
 
 	let mut test = "fn hi() { 5 }".to_string();
 
-   	match parse::parseTop(&mut test) {
+   	match parse::parse_top(&mut test) {
    		Ok(ast) => println!("{}", writer::to_s(&ast)),
    		Err(msg) => println!("Err {}", msg)
    	}
