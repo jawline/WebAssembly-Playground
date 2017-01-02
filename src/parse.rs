@@ -6,7 +6,7 @@ enum Token {
 	Function,
 	LParen, RParen,
 	LBrace, RBrace,
-	Plus,
+	Plus, Minus, Multiply, Divide,
 	ID(String),
 	Number(i32)
 }
@@ -34,6 +34,21 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 			*cur = cur.trim()[1..].to_string();
 		}
 		Ok(Token::Plus)
+	} else if cur.trim().starts_with("-") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Minus)
+	} else if cur.trim().starts_with("*") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Multiply)
+	} else if cur.trim().starts_with("/") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Divide)
 	} else if cur.trim().starts_with("{") {
 		
 		if !peek {
