@@ -75,9 +75,10 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	let nt = try!(tok(cur, false));
+	let name;
 
 	match nt {
-		Token::ID(_) => {},
+		Token::ID(x) => { name = x; },
 		_ => return Err(format!("expected ID when {:?}", nt))
 	}
 
@@ -97,13 +98,13 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 		return Err("Functions cannot be empty".to_string())
 	}
 
-	let newFn = try!(parse_expr(cur));
+	let new_fn = AST::Function(name, Vec::new(), Box::new(try!(parse_expr(cur))));
 
 	if try!(tok(cur, false)) != Token::RBrace {
 		return Err("expected RB".to_string());
 	}
 
-	return Ok(newFn);
+	return Ok(new_fn);
 }
 
 pub fn parse_top(cur: &mut String) -> Result<AST, String> {
