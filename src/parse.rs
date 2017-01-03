@@ -189,10 +189,6 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 }
 
 pub fn parse_top(cur: &mut String) -> Result<AST, String> {
-	let first = try!(tok(cur, false));
-	if first == Token::Function {
-		parse_fn(cur)
-	} else {
-		Err("First token should be fn".to_string())
-	}
+	expect!(Token::Function, cur);
+	parse_fn(cur)
 }
