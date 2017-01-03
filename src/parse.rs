@@ -1,6 +1,14 @@
 use ast::*;
 use regex::Regex;
 
+macro_rules! expect {
+    ($thet:expr, $cur:expr) => {
+        if try!(tok($cur, false)) != $thet {
+			return Err(format!("Expected {:?} near {:?}", $thet, $cur));
+		}
+    };
+}
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function,
@@ -134,24 +142,28 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 fn parse_args(cur: &mut String) -> Result<Vec<String>, String> {
 	let mut args = Vec::new();
 
-	loop {
+	if try!(tok(cur, true)) == Token::RParen {
+		Ok(args)
+	} else {
+		loop {
 
-		match try!(tok(cur, false)) {
-			Token::ID(n) => { args.push(n); },
-			_ => { return Err("oh no".to_string()); }
+			match try!(tok(cur, false)) {
+				Token::ID(n) => { args.push(n); },
+				_ => { return Err("oh no".to_string()); }
+			}
+
+			if try!(tok(cur, true)) == Token::Comma {
+				try!(tok(cur, false));
+			} else if try!(tok(cur, true)) == Token::RParen {
+				try!(tok(cur, false));
+				break;
+			} else {
+				return Err("bugger expected Comma or RParen".to_string());
+			}
 		}
 
-		if try!(tok(cur, true)) == Token::Comma {
-			try!(tok(cur, false));
-		} else if try!(tok(cur, true)) == Token::RParen {
-			try!(tok(cur, false));
-			break;
-		} else {
-			return Err("bugger expected Comma or RParen".to_string());
-		}
+		Ok(args)
 	}
-
-	Ok(args)
 }
 
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
@@ -163,25 +175,15 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 		_ => return Err(format!("expected ID when {:?}", nt))
 	}
 
-	if try!(tok(cur, false)) != Token::LParen {
-		return Err("expected LP".to_string());
-	}
+	expect!(Token::LParen, cur);
 
 	let args = try!(parse_args(cur));
 
-	if try!(tok(cur, false)) != Token::LBrace {
-		return Err("expected LB".to_string());
-	}
-
-	if try!(tok(cur, true)) == Token::RBrace {
-		return Err("Functions cannot be empty".to_string())
-	}
+	expect!(Token::LBrace, cur);
 
 	let new_fn = AST::Function(name, args, Box::new(try!(parse_expr(cur))));
 
-	if try!(tok(cur, false)) != Token::RBrace {
-		return Err("expected RB".to_string());
-	}
+	expect!(Token::RBrace, cur);
 
 	return Ok(new_fn);
 }
