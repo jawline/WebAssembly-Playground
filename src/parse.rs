@@ -162,12 +162,11 @@ fn parse_args(cur: &mut String) -> Result<Vec<String>, String> {
 }
 
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
-	let nt = try!(tok(cur, false));
 	let name;
 
-	match nt {
+	match try!(tok(cur, false)) {
 		Token::ID(x) => { name = x; },
-		_ => return Err(format!("expected ID when {:?}", nt))
+		_ => return Err(format!("expected ID near {:?}", cur))
 	}
 
 	expect!(Token::LParen, cur);
