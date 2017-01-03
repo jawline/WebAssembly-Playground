@@ -11,8 +11,9 @@ pub enum Type {
 
 impl ToString for Type {
 	fn to_string(&self) -> String {
-		match self {
-			Int32 => "i32".to_string()
+		match *self {
+			Type::Int32 => "i32".to_string(),
+			Type::None => "none".to_string()
 		}
 	}
 }
@@ -54,16 +55,13 @@ impl AST {
 		match self {
 			&AST::Literal(ref x) => {
 				match *x {
-					Int32 => Type::Int32
+					Constant::Int32(_) => Type::Int32
 				}
 			},
 			&AST::Function(_, _, ref body) => {
 				body.as_t()
 			},
-			&AST::BinaryOp(ref op, ref left, ref right) =>
-				match op {
-					Add => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
-				}
+			&AST::BinaryOp(_, ref left, ref right) => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
 		}
 	}
 

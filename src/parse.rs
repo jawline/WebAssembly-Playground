@@ -6,7 +6,7 @@ enum Token {
 	Function,
 	LParen, RParen,
 	LBrace, RBrace,
-	Plus, Minus, Multiply, Divide, Mod,
+	Comma, Plus, Minus, Multiply, Divide, Mod,
 	ID(String),
 	Number(i32)
 }
@@ -47,6 +47,11 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 			*cur = cur.trim()[1..].to_string();
 		}
 		Ok(Token::Plus)
+	} else if cur.trim().starts_with(",") {
+		if !peek {
+			*cur = cur.trim()[1..].to_string();
+		}
+		Ok(Token::Comma)
 	} else if cur.trim().starts_with("%") {
 		if !peek {
 			*cur = cur.trim()[1..].to_string();
@@ -126,6 +131,29 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 	}
 }
 
+fn parse_args(cur: &mut String) -> Result<Vec<String>, String> {
+	let mut args = Vec::new();
+
+	loop {
+
+		match try!(tok(cur, false)) {
+			Token::ID(n) => { args.push(n); },
+			_ => { return Err("oh no".to_string()); }
+		}
+
+		if try!(tok(cur, true)) == Token::Comma {
+			try!(tok(cur, false));
+		} else if try!(tok(cur, true)) == Token::RParen {
+			try!(tok(cur, false));
+			break;
+		} else {
+			return Err("bugger expected Comma or RParen".to_string());
+		}
+	}
+
+	Ok(args)
+}
+
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	let nt = try!(tok(cur, false));
 	let name;
@@ -139,9 +167,7 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 		return Err("expected LP".to_string());
 	}
 
-	if try!(tok(cur, false)) != Token::RParen {
-		return Err("expected RP".to_string());
-	}
+	let args = try!(parse_args(cur));
 
 	if try!(tok(cur, false)) != Token::LBrace {
 		return Err("expected LB".to_string());
@@ -151,7 +177,7 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 		return Err("Functions cannot be empty".to_string())
 	}
 
-	let new_fn = AST::Function(name, Vec::new(), Box::new(try!(parse_expr(cur))));
+	let new_fn = AST::Function(name, args, Box::new(try!(parse_expr(cur))));
 
 	if try!(tok(cur, false)) != Token::RBrace {
 		return Err("expected RB".to_string());
