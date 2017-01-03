@@ -139,31 +139,28 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 	}
 }
 
+fn parse_arg(cur: &mut String) -> Result<String, String> {
+	let name;
+	match try!(tok(cur, false)) {
+		Token::ID(n) => { name = n; },
+		_ => { return Err("oh no".to_string()); }
+	}
+	Ok(name)
+}
+
 fn parse_args(cur: &mut String) -> Result<Vec<String>, String> {
 	let mut args = Vec::new();
 
-	if try!(tok(cur, true)) == Token::RParen {
-		Ok(args)
-	} else {
-		loop {
-
-			match try!(tok(cur, false)) {
-				Token::ID(n) => { args.push(n); },
-				_ => { return Err("oh no".to_string()); }
-			}
-
-			if try!(tok(cur, true)) == Token::Comma {
-				try!(tok(cur, false));
-			} else if try!(tok(cur, true)) == Token::RParen {
-				try!(tok(cur, false));
-				break;
-			} else {
-				return Err("bugger expected Comma or RParen".to_string());
-			}
+	loop {
+		if try!(tok(cur, true)) == Token::RParen {
+			try!(tok(cur, false));
+			break;
+		} else {
+			args.push(try!(parse_arg(cur)));
 		}
-
-		Ok(args)
 	}
+
+	Ok(args)
 }
 
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
