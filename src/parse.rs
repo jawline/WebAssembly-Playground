@@ -116,8 +116,7 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 }
 
 fn parse_atom(cur: &mut String) -> Result<AST, String> {
-	let n1 = try!(tok(cur, false));
-	if let Token::Number(n) = n1 {
+	if let Token::Number(n) = try!(tok(cur, false)) {
 		Ok(AST::lit(n))
 	} else {
 		Err(("unexpected token near ".to_string() + &cur).to_string())
@@ -132,8 +131,7 @@ fn parse_expr(cur: &mut String) -> Result<AST, String> {
 		Token::Plus | Token::Minus | Token::Multiply | Token::Divide | Token::Mod => {
 			//Discard the peeked token
 			try!(tok(cur, false));
-			let e2 = try!(parse_expr(cur));
-			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(e2)))
+			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur)))))
 		},
 		_ => Ok(a1)
 	}

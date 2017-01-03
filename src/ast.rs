@@ -80,7 +80,7 @@ impl AST {
 				let plen = params.len();
 
 				for i in 0..plen {
-					prelude += &("(param $".to_string() + &i.to_string() + " " + &params[i] + ") ");
+					prelude += &("(param $".to_string() + &i.to_string() + " i32) ");
 				}
 
 				prelude += &("(result ".to_string() + &body.as_t().to_string() + ") ");
