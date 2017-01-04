@@ -26,7 +26,7 @@ macro_rules! peek {
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function, If, Then, Else,
-	LParen, RParen,
+	LParen, RParen, Comma,
 	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod, GreaterThan, LessThan,
 	ID(String),
 	Number(i32)
@@ -40,6 +40,7 @@ impl Token {
 			')' => Some(Token::RParen),
 			'{' => Some(Token::LBrace),
 			'}' => Some(Token::RBrace),
+			',' => Some(Token::Comma),
 			'+' => Some(Token::Plus),
 			'-' => Some(Token::Minus),
 			'*' => Some(Token::Multiply),
@@ -101,9 +102,24 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 
 fn parse_fn_args(cur: &mut String, args: &Args) -> Result<Vec<AST>, String> {
 	let mut res = Vec::new();
-	while !peek!(Token::RParen, cur) {
-		res.push(try!(parse_expr(cur, args)));
+
+	loop {
+		if peek!(Token::RParen, cur) {
+			break;
+		} else {
+			res.push(try!(parse_expr(cur, args)));
+			if !(peek!(Token::Comma, cur) || peek!(Token::RParen, cur)) {
+				return Err(format!("unexpected token near {}", cur))
+			} else if peek!(Token::Comma, cur) {
+				try!(tok(cur, false)); //Discard token
+				//Dont want ,)
+				if peek!(Token::RParen, cur) {
+					return Err(format!("Unexpected rparen ,) not allowed near {}", cur));
+				}
+			}
+		}
 	}
+
 	expect!(Token::RParen, cur);
 	Ok(res)
 }
@@ -158,7 +174,14 @@ fn parse_maybe_if(cur: &mut String, args: &Args) -> Result<AST, String> {
 }
 
 fn parse_expr(cur: &mut String, args: &Args) -> Result<AST, String> {
-	parse_maybe_if(cur, args)
+	if peek!(Token::LParen, cur) {
+		expect!(Token::LParen, cur);
+		let r = parse_expr(cur, args);
+		expect!(Token::RParen, cur);
+		r
+	} else {
+		parse_maybe_if(cur, args)
+	}
 }
 
 fn parse_arg(cur: &mut String) -> Result<String, String> {
