@@ -1,5 +1,6 @@
 extern crate regex;
 
+#[macro_use] mod warn;
 mod ast;
 mod writer;
 mod parse;

@@ -1,3 +1,3 @@
-fn abc(x y z) {
-	10 + 5 + 10 + 20
+fn abc(x) {
+	x
 }

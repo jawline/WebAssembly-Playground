@@ -1,3 +1,5 @@
+use std::io::Write; //For warn!
+
 #[derive(Clone, Copy)]
 pub enum Constant {
 	Int32(i32)
@@ -48,10 +50,6 @@ impl AST {
 		AST::Literal(Constant::Int32(x))
 	}
 
-	pub fn add(l: Box<AST>, r: Box<AST>) -> AST {
-		AST::BinaryOp(BinaryOperation::Add, l, r)
-	}
-
 	pub fn as_t(&self) -> Type {
 		match self {
 			&AST::Literal(ref x) => {
@@ -61,6 +59,10 @@ impl AST {
 			},
 			&AST::Function(_, _, ref body) => {
 				body.as_t()
+			},
+			&AST::Local(_) => {
+				warn!("Local grab is not typesafe");
+				Type::Int32
 			},
 			&AST::BinaryOp(_, ref left, ref right) => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
 		}
@@ -74,21 +76,23 @@ impl AST {
 				},
 			&AST::Function(ref name, ref params, ref body) => {
 
-				let mut prelude;
-				prelude = " (export \"".to_string() + name + "\" $" + name + ") "; 
-				prelude += "(func $";
-				prelude += &(name.to_string() + " ");
-				let plen = params.len();
+				let mut params_text = "".to_string();
 
+				let plen = params.len();
 				for i in 0..plen {
-					prelude += &("(param $".to_string() + &i.to_string() + " i32) ");
+					params_text += &format!("(param ${} {})", i, "i32");
 				}
 
-				prelude += &("(result ".to_string() + &body.as_t().to_string() + ") ");
-				prelude += &body.as_s();
-				prelude += ")";
-				prelude
+				let ret = format!("(result {})", body.as_t().to_string());
+
+				let exp = format!("(export {} ${})", name, name);
+				let func = format!("(func ${} {} {} {})", name, params_text, ret, body.as_s());
+
+				format!("{} {}", exp, func)
 			},
+			&AST::Local(ref size) => {
+				format!("(get_local ${})", size)
+			}
 			&AST::BinaryOp(ref op, ref left, ref right) => ("(".to_string() + &left.as_t().to_string() + "." + &op.instr() + " " + &left.as_s() + " " + &right.as_s() + ")").to_string()
 		}
 	}
