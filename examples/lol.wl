@@ -1,9 +1,6 @@
 fn abc(x) {
-	x
+	if x then
+		5 
+	else 
+		10
 }
-
-fn hello(x y z) {
-	x + y - z
-}
-
-fn bye_bye() { 5 }

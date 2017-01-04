@@ -42,7 +42,8 @@ pub enum AST {
 	Literal(Constant),
 	Function(String, Args, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
-	Local(usize, Arg)
+	Local(usize, Arg),
+	If(Box<AST>, Box<AST>, Box<AST>)
 }
 
 impl AST {
@@ -53,6 +54,9 @@ impl AST {
 
 	pub fn as_t(&self) -> Type {
 		match self {
+			&AST::If(_, ref left, ref right) => {
+				if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
+			},
 			&AST::Literal(ref x) => {
 				match *x {
 					Constant::Int32(_) => Type::Int32
@@ -70,6 +74,7 @@ impl AST {
 
 	pub fn as_s(&self) -> String {
 		match self {
+			&AST::If(ref cnd, ref left, ref right) => format!("(if {} {} {} {})", left.as_t().to_string(), cnd.as_s(), left.as_s(), right.as_s()),
 			&AST::Literal(ref x) =>
 				match *x {
 					Constant::Int32(v) => format!("(i32.const {})", v)

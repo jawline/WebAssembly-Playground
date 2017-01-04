@@ -11,7 +11,7 @@ macro_rules! expect {
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
-	Function,
+	Function, If, Then, Else,
 	LParen, RParen,
 	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod,
 	ID(String),
@@ -59,6 +59,12 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 		let cur = cur.trim(); //Block scope rename cur to trimmed cur
 		if cur.starts_with("fn") {
 			(Ok(Token::Function), 2)
+		} else if cur.starts_with("if") {
+			(Ok(Token::If), 2)
+		} else if cur.starts_with("then") {
+			(Ok(Token::Then), 4)
+		} else if cur.starts_with("else") {
+			(Ok(Token::Else), 4)
 		} else if let Some((first, second)) = num_literal_regex.find(cur) {
 			(Ok(Token::Number(cur[first..second].parse::<i32>().unwrap())), second)
 		} else if let Some((first, second)) = name_regex.find(cur) {
@@ -90,7 +96,7 @@ fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 	}
 }
 
-fn parse_expr(cur: &mut String, args: &Args) -> Result<AST, String> {
+fn parse_maybe_arith(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur, args));
 	let peek = try!(tok(cur, true));
 
@@ -102,6 +108,26 @@ fn parse_expr(cur: &mut String, args: &Args) -> Result<AST, String> {
 		},
 		_ => Ok(a1)
 	}
+}
+
+fn parse_maybe_if(cur: &mut String, args: &Args) -> Result<AST, String> {
+
+	//if peek and If then expect If cnd Then truepath Else falsepath. Else parse arith
+	if try!(tok(cur, true)) == Token::If {
+		try!(tok(cur, false)); //Discard If
+		let cnd = try!(parse_expr(cur, args));
+		expect!(Token::Then, cur);
+		let true_path = try!(parse_expr(cur, args));
+		expect!(Token::Else, cur);
+		let false_path = try!(parse_expr(cur, args));
+		Ok(AST::If(Box::new(cnd), Box::new(true_path), Box::new(false_path)))
+	} else {
+		parse_maybe_arith(cur, args)
+	}
+}
+
+fn parse_expr(cur: &mut String, args: &Args) -> Result<AST, String> {
+	parse_maybe_if(cur, args)
 }
 
 fn parse_arg(cur: &mut String) -> Result<String, String> {
