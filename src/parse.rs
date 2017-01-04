@@ -53,17 +53,20 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	let name_regex: Regex = Regex::new("^[:alnum:]+").unwrap();
 	let num_literal_regex: Regex = Regex::new("^[:digit:]+").unwrap();
 
+	//If its a single character token match in O(1)
 	let (tok, size) = if let Some(t) = Token::is_tok(cur.trim().chars().next().unwrap_or('\0')) {
 		(Ok(t), 1)
 	} else {
-		if cur.trim().starts_with("fn") {
+		//Section matches multi-character tokens
+		let cur = cur.trim(); //Block scope rename cur to trimmed cur
+		if cur.starts_with("fn") {
 			(Ok(Token::Function), 2)
-		} else if let Some((first, second)) = num_literal_regex.find(cur.trim()) {
-			(Ok(Token::Number(cur.trim()[first..second].parse::<i32>().unwrap())), second)
-		} else if let Some((first, second)) = name_regex.find(cur.trim()) {
-			(Ok(Token::ID(cur.trim()[first..second].to_string())), second)
+		} else if let Some((first, second)) = num_literal_regex.find(cur) {
+			(Ok(Token::Number(cur[first..second].parse::<i32>().unwrap())), second)
+		} else if let Some((first, second)) = name_regex.find(cur) {
+			(Ok(Token::ID(cur[first..second].to_string())), second)
 		} else {
-			(Err(("No token at ".to_string() + cur.trim()).to_string()), 0)
+			(Err(("No token at ".to_string() + cur).to_string()), 0)
 		}
 	};
 
