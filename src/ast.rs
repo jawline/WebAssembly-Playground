@@ -1,3 +1,5 @@
+use std::io::Write;
+
 #[derive(Clone, Copy)]
 pub enum Constant {
 	Int32(i32)
@@ -23,7 +25,7 @@ impl ToString for Type {
 
 #[derive(Clone, Copy)]
 pub enum BinaryOperation {
-	Add, Subtract, Multiply, Divide, Mod
+	Add, Subtract, Multiply, Divide, Mod, GreaterThan, LessThan
 }
 
 impl BinaryOperation {
@@ -33,7 +35,9 @@ impl BinaryOperation {
 			BinaryOperation::Subtract => "sub",
 			BinaryOperation::Multiply => "mul",
 			BinaryOperation::Divide => "div",
-			BinaryOperation::Mod => "mod"
+			BinaryOperation::Mod => "mod",
+			BinaryOperation::GreaterThan => "gt_s",
+			BinaryOperation::LessThan => "lt_s"
 		}.to_string()
 	}
 }
@@ -43,7 +47,8 @@ pub enum AST {
 	Function(String, Args, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
 	Local(usize, Arg),
-	If(Box<AST>, Box<AST>, Box<AST>)
+	If(Box<AST>, Box<AST>, Box<AST>),
+	Call(String)
 }
 
 impl AST {
@@ -54,6 +59,10 @@ impl AST {
 
 	pub fn as_t(&self) -> Type {
 		match self {
+			&AST::Call(String) => {
+				warn!("Fn calls not TypeSafe");
+				Type::Int32
+			},
 			&AST::If(_, ref left, ref right) => {
 				if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
 			},
@@ -74,6 +83,7 @@ impl AST {
 
 	pub fn as_s(&self) -> String {
 		match self {
+			&AST::Call(ref name) => format!("(call ${})", name),
 			&AST::If(ref cnd, ref left, ref right) => format!("(if {} {} {} {})", left.as_t().to_string(), cnd.as_s(), left.as_s(), right.as_s()),
 			&AST::Literal(ref x) =>
 				match *x {

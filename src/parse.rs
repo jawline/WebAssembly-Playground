@@ -13,7 +13,7 @@ macro_rules! expect {
 enum Token {
 	Function, If, Then, Else,
 	LParen, RParen,
-	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod,
+	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod, GreaterThan, LessThan,
 	ID(String),
 	Number(i32)
 }
@@ -30,6 +30,8 @@ impl Token {
 			'-' => Some(Token::Minus),
 			'*' => Some(Token::Multiply),
 			'/' => Some(Token::Divide),
+			'>' => Some(Token::GreaterThan),
+			'<' => Some(Token::LessThan),
 			'%' => Some(Token::Mod),
 			_ => { None }
 		}
@@ -42,6 +44,8 @@ impl Token {
 			Token::Multiply => Some(BinaryOperation::Multiply),
 			Token::Divide => Some(BinaryOperation::Divide),
 			Token::Mod => Some(BinaryOperation::Mod),
+			Token::GreaterThan => Some(BinaryOperation::GreaterThan),
+			Token::LessThan => Some(BinaryOperation::LessThan),
 			_ => None
 		}
 	}
@@ -100,13 +104,12 @@ fn parse_maybe_arith(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur, args));
 	let peek = try!(tok(cur, true));
 
-	match peek {
-		Token::Plus | Token::Minus | Token::Multiply | Token::Divide | Token::Mod => {
-			//Discard the peeked token
-			try!(tok(cur, false));
-			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
-		},
-		_ => Ok(a1)
+	if peek.op().is_some() {
+		//Discard the peeked token
+		try!(tok(cur, false));
+		Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
+	} else {
+		Ok(a1)
 	}
 }
 

@@ -1,6 +1,10 @@
 fn abc(x) {
-	if x then
-		5 
-	else 
-		10
+	if x > 10 then
+		x
+	else
+		b()
+}
+
+fn b() {
+	5
 }
