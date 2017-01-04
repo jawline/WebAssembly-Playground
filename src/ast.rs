@@ -1,5 +1,3 @@
-use std::io::Write; //For warn!
-
 #[derive(Clone, Copy)]
 pub enum Constant {
 	Int32(i32)
