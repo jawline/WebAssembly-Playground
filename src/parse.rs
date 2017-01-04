@@ -203,7 +203,7 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	expect!(Token::LBrace, cur);
 
 	let parsed_expr = try!(parse_expr(cur, &args));
-	let new_fn = AST::Function(name, args, Box::new(parsed_expr));
+	let new_fn = AST::Function(name, args, Type::Int32, Box::new(parsed_expr));
 
 	expect!(Token::RBrace, cur);
 

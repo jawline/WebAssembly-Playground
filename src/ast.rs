@@ -1,5 +1,3 @@
-use std::io::Write;
-
 #[derive(Clone, Copy)]
 pub enum Constant {
 	Int32(i32)
@@ -45,7 +43,7 @@ impl BinaryOperation {
 
 pub enum AST {
 	Literal(Constant),
-	Function(String, Args, Box<AST>),
+	Function(String, Args, Type, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
 	Local(usize, Arg),
 	If(Box<AST>, Box<AST>, Box<AST>),
@@ -66,8 +64,8 @@ impl AST {
 			},
 			&AST::Call(ref name, _) => {
 				//TODO: TypeCheck Call Arguments
-				match scope_items.iter().find(|&x| if let &AST::Function(ref f_name, _, _) = x { name == f_name } else { false }) {
-					Some(&AST::Function(_, _, ref ast)) => ast.as_t(scope_items),
+				match scope_items.iter().find(|&x| if let &AST::Function(ref f_name, _, _, _) = x { name == f_name } else { false }) {
+					Some(&AST::Function(_, _, ref t, _)) => *t,
 					_ => Type::None
 				}
 			},
@@ -79,8 +77,8 @@ impl AST {
 					Constant::Int32(_) => Type::Int32
 				}
 			},
-			&AST::Function(_, _, ref body) => {
-				body.as_t(scope_items)
+			&AST::Function(_, _, ref t, ref body) => {
+				if body.as_t(scope_items) == *t { *t } else { Type::None }
 			},
 			&AST::Local(_, ref arg) => {
 				arg.1
@@ -105,7 +103,7 @@ impl AST {
 				match *x {
 					Constant::Int32(v) => format!("(i32.const {})", v)
 				},
-			&AST::Function(ref name, ref params, ref body) => {
+			&AST::Function(ref name, ref params, ref t, ref body) => {
 
 				let mut params_text = "".to_string();
 
@@ -115,7 +113,7 @@ impl AST {
 					params_text += &format!("(param ${} {})", i, "i32");
 				}
 
-				let ret = format!("(result {})", body.as_t(scope_items).to_string());
+				let ret = format!("(result {})", t.to_string());
 
 				let exp = format!("(export {} ${})", name, name);
 				let func = format!("(func ${} {} {} {})", name, params_text, ret, body.as_s(scope_items));
