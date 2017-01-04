@@ -160,7 +160,7 @@ pub fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
 	expect!(Token::Function, cur);
 	let new_fn = try!(parse_fn(cur));
 
-	if try!(tok(cur, true)) == Token::Function {
+	if let Ok(Token::Function) = tok(cur, true) {
 		let mut next_fn = try!(parse_top(cur));
 		next_fn.push(new_fn);
 		Ok(next_fn)
