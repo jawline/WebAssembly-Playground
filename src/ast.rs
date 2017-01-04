@@ -39,6 +39,7 @@ pub enum AST {
 	Literal(Constant),
 	Function(String, Vec<String>, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
+	Local(usize)
 }
 
 impl AST {

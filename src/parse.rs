@@ -9,6 +9,8 @@ macro_rules! expect {
     };
 }
 
+type Arg = String;
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function,
@@ -115,34 +117,44 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	}
 }
 
-fn parse_atom(cur: &mut String) -> Result<AST, String> {
-	if let Token::Number(n) = try!(tok(cur, false)) {
+fn parse_atom(cur: &mut String, args: &Vec<Arg>) -> Result<AST, String> {
+	let atom_tok = try!(tok(cur, false));
+	if let Token::Number(n) = atom_tok {
 		Ok(AST::lit(n))
+	} else if let Token::ID(s) = atom_tok {
+		match args.iter().enumerate().find(|&r| r.1 == &s) {
+			Some((size, _)) => Ok(AST::Local(size)),
+			None => Err(format!("No variable named {}", s))
+		}
+
 	} else {
 		Err(("unexpected token near ".to_string() + &cur).to_string())
 	}
 }
 
-fn parse_expr(cur: &mut String) -> Result<AST, String> {
-	let a1 = try!(parse_atom(cur));
+fn parse_expr(cur: &mut String, args: &Vec<String>) -> Result<AST, String> {
+	let a1 = try!(parse_atom(cur, args));
 	let peek = try!(tok(cur, true));
 
 	match peek {
 		Token::Plus | Token::Minus | Token::Multiply | Token::Divide | Token::Mod => {
 			//Discard the peeked token
 			try!(tok(cur, false));
-			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur)))))
+			Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
 		},
 		_ => Ok(a1)
 	}
 }
 
 fn parse_arg(cur: &mut String) -> Result<String, String> {
+
 	let name;
+
 	match try!(tok(cur, false)) {
 		Token::ID(n) => { name = n; },
 		_ => { return Err("oh no".to_string()); }
 	}
+
 	Ok(name)
 }
 
@@ -175,7 +187,9 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 
 	expect!(Token::LBrace, cur);
 
-	let new_fn = AST::Function(name, args, Box::new(try!(parse_expr(cur))));
+	let parsed_expr = try!(parse_expr(cur, &args));
+
+	let new_fn = AST::Function(name, args, Box::new(parsed_expr));
 
 	expect!(Token::RBrace, cur);
 
