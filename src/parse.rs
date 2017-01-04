@@ -103,20 +103,11 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 fn parse_fn_args(cur: &mut String, args: &Args) -> Result<Vec<AST>, String> {
 	let mut res = Vec::new();
 
-	loop {
-		if peek!(Token::RParen, cur) {
-			break;
-		} else {
-			res.push(try!(parse_expr(cur, args)));
-			if !(peek!(Token::Comma, cur) || peek!(Token::RParen, cur)) {
-				return Err(format!("unexpected token near {}", cur))
-			} else if peek!(Token::Comma, cur) {
-				try!(tok(cur, false)); //Discard token
-				//Dont want ,)
-				if peek!(Token::RParen, cur) {
-					return Err(format!("Unexpected rparen ,) not allowed near {}", cur));
-				}
-			}
+	//TODO: Find a concise way of disallowing ,)
+	while !peek!(Token::RParen, cur) {
+		res.push(try!(parse_expr(cur, args)));
+		if !(peek!(Token::Comma, cur) || peek!(Token::RParen, cur)) {
+			return Err(format!("unexpected toke near {}", cur));
 		}
 	}
 
