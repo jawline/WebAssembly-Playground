@@ -135,7 +135,7 @@ fn parse_maybe_arith(cur: &mut String, args: &Args) -> Result<AST, String> {
 fn parse_maybe_if(cur: &mut String, args: &Args) -> Result<AST, String> {
 
 	//if peek and If then expect If cnd Then truepath Else falsepath. Else parse arith
-	if try!(tok(cur, true)) == Token::If {
+	if peek!(Token::If, cur) {
 		try!(tok(cur, false)); //Discard If
 		let cnd = try!(parse_expr(cur, args));
 		expect!(Token::Then, cur);
@@ -168,8 +168,8 @@ fn parse_args(cur: &mut String) -> Result<Args, String> {
 	let mut args = Args::new();
 
 	loop {
-		if try!(tok(cur, true)) == Token::RParen {
-			try!(tok(cur, false));
+		if peek!(Token::RParen, cur) {
+			expect!(Token::RParen, cur);
 			break;
 		} else {
 			args.push((try!(parse_arg(cur)), Type::Int32));
