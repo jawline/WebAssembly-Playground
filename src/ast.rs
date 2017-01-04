@@ -48,8 +48,8 @@ pub enum AST {
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
 	Local(usize, Arg),
 	If(Box<AST>, Box<AST>, Box<AST>),
-	Call(String),
-	Scope(Vec<Box<AST>>)
+	Call(String, Vec<AST>),
+	Scope(Vec<AST>)
 }
 
 impl AST {
@@ -63,7 +63,7 @@ impl AST {
 			&AST::Scope(_) => {
 				Type::None
 			},
-			&AST::Call(_) => {
+			&AST::Call(_, _) => {
 				warn!("Fn calls not TypeSafe");
 				Type::Int32
 			},
@@ -91,7 +91,10 @@ impl AST {
 				let function_asts = functions.iter().fold("".to_string(), |prev, next| prev + &next.as_s());
 				format!("(module {})", function_asts)
 			},
-			&AST::Call(ref name) => format!("(call ${})", name),
+			&AST::Call(ref name, ref args) => {
+				let arg_asts = args.iter().fold("".to_string(), |p, n| p + &n.as_s());
+				format!("(call ${} {})", name, arg_asts)
+			},
 			&AST::If(ref cnd, ref left, ref right) => format!("(if {} {} {} {})", left.as_t().to_string(), cnd.as_s(), left.as_s(), right.as_s()),
 			&AST::Literal(ref x) =>
 				match *x {

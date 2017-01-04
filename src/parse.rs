@@ -107,7 +107,7 @@ fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 		if peek!(Token::LParen, cur) { //Peek => Function call
 			expect!(Token::LParen, cur);
 			expect!(Token::RParen, cur);
-			Ok(AST::Call(s))
+			Ok(AST::Call(s, Vec::new()))
 		} else {
 			match args.iter().enumerate().find(|&r| (r.1).0 == s) {
 				Some((size, item)) => Ok(AST::Local(size, item.clone())),
@@ -202,17 +202,17 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 }
 
 //Top = Fn = Top Fn
-pub fn parse_top(cur: &mut String) -> Result<Vec<Box<AST>>, String> {
+pub fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
 	expect!(Token::Function, cur);
 	let new_fn = try!(parse_fn(cur));
 
 	if peek!(Token::Function, cur) {
 		let mut next_fn = try!(parse_top(cur));
-		next_fn.push(Box::new(new_fn));
+		next_fn.push(new_fn);
 		Ok(next_fn)
 	} else {
 		let mut root_fn = Vec::new();
-		root_fn.push(Box::new(new_fn));
+		root_fn.push(new_fn);
 		Ok(root_fn)
 	}
 }

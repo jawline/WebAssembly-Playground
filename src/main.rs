@@ -18,7 +18,7 @@ fn main() {
 		let mut d = String::new();
 		f.read_to_string(&mut d).unwrap();
 
-	   	match parse::parse_top(&mut d) {
+	   	match parse::parse(&mut d) {
 	   		Ok(ast) => println!("{}", ast.as_s()),
 	   		Err(msg) => println!("Err {}", msg)
 	   	};
