@@ -13,6 +13,7 @@ pub enum Type {
 
 pub type Arg = (String, Type);
 pub type Args = Vec<Arg>;
+pub type ScopeItems = Vec<AST>;
 
 impl ToString for Type {
 	fn to_string(&self) -> String {
@@ -49,7 +50,7 @@ pub enum AST {
 	Local(usize, Arg),
 	If(Box<AST>, Box<AST>, Box<AST>),
 	Call(String, Vec<AST>),
-	Scope(Vec<AST>)
+	Scope(ScopeItems)
 }
 
 impl AST {
@@ -58,17 +59,20 @@ impl AST {
 		AST::Literal(Constant::Int32(x))
 	}
 
-	pub fn as_t(&self) -> Type {
+	pub fn as_t(&self, scope_items: &ScopeItems) -> Type {
 		match self {
 			&AST::Scope(_) => {
 				Type::None
 			},
-			&AST::Call(_, _) => {
-				warn!("Fn calls not TypeSafe");
-				Type::Int32
+			&AST::Call(ref name, _) => {
+				//TODO: TypeCheck Call Arguments
+				match scope_items.iter().find(|&x| if let &AST::Function(ref f_name, _, _) = x { name == f_name } else { false }) {
+					Some(&AST::Function(_, _, ref ast)) => ast.as_t(scope_items),
+					_ => Type::None
+				}
 			},
 			&AST::If(_, ref left, ref right) => {
-				if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
+				if left.as_t(scope_items) == right.as_t(scope_items) { left.as_t(scope_items) } else { Type::None }
 			},
 			&AST::Literal(ref x) => {
 				match *x {
@@ -76,26 +80,27 @@ impl AST {
 				}
 			},
 			&AST::Function(_, _, ref body) => {
-				body.as_t()
+				body.as_t(scope_items)
 			},
 			&AST::Local(_, ref arg) => {
 				arg.1
 			},
-			&AST::BinaryOp(_, ref left, ref right) => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
+			&AST::BinaryOp(_, ref left, ref right) => if left.as_t(scope_items) == right.as_t(scope_items) { left.as_t(scope_items) } else { Type::None }
 		}
 	}
 
-	pub fn as_s(&self) -> String {
+	pub fn as_s(&self, scope_items: &ScopeItems) -> String {
 		match self {
 			&AST::Scope(ref functions) => {
-				let function_asts = functions.iter().fold("".to_string(), |prev, next| prev + &next.as_s());
+				let function_asts = functions.iter().fold("".to_string(), |prev, next| prev + &next.as_s(functions));
 				format!("(module {})", function_asts)
 			},
 			&AST::Call(ref name, ref args) => {
-				let arg_asts = args.iter().fold("".to_string(), |p, n| p + &n.as_s());
+				//TODO: TypeCheck call arguments
+				let arg_asts = args.iter().fold("".to_string(), |p, n| p + &n.as_s(scope_items));
 				format!("(call ${} {})", name, arg_asts)
 			},
-			&AST::If(ref cnd, ref left, ref right) => format!("(if {} {} {} {})", left.as_t().to_string(), cnd.as_s(), left.as_s(), right.as_s()),
+			&AST::If(ref cnd, ref left, ref right) => format!("(if {} {} {} {})", left.as_t(scope_items).to_string(), cnd.as_s(scope_items), left.as_s(scope_items), right.as_s(scope_items)),
 			&AST::Literal(ref x) =>
 				match *x {
 					Constant::Int32(v) => format!("(i32.const {})", v)
@@ -110,17 +115,17 @@ impl AST {
 					params_text += &format!("(param ${} {})", i, "i32");
 				}
 
-				let ret = format!("(result {})", body.as_t().to_string());
+				let ret = format!("(result {})", body.as_t(scope_items).to_string());
 
 				let exp = format!("(export {} ${})", name, name);
-				let func = format!("(func ${} {} {} {})", name, params_text, ret, body.as_s());
+				let func = format!("(func ${} {} {} {})", name, params_text, ret, body.as_s(scope_items));
 
 				format!("{} {}", exp, func)
 			},
 			&AST::Local(ref size, _) => {
 				format!("(get_local ${})", size)
 			}
-			&AST::BinaryOp(ref op, ref left, ref right) => format!("({}.{} {} {})", left.as_t().to_string(), op.instr(), left.as_s(), right.as_s())
+			&AST::BinaryOp(ref op, ref left, ref right) => format!("({}.{} {} {})", left.as_t(scope_items).to_string(), op.instr(), left.as_s(scope_items), right.as_s(scope_items))
 		}
 	}
 }

@@ -19,7 +19,7 @@ fn main() {
 		f.read_to_string(&mut d).unwrap();
 
 	   	match parse::parse(&mut d) {
-	   		Ok(ast) => println!("{}", ast.as_s()),
+	   		Ok(ast) => println!("{}", ast.as_s(&Vec::new())),
 	   		Err(msg) => println!("Err {}", msg)
 	   	};
 
