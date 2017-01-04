@@ -72,13 +72,14 @@ impl AST {
 		match self {
 			&AST::Literal(ref x) =>
 				match *x {
-					Constant::Int32(v) => ("(i32.const ".to_string() + &v.to_string() + ")").to_string()
+					Constant::Int32(v) => format!("(i32.const {})", v)
 				},
 			&AST::Function(ref name, ref params, ref body) => {
 
 				let mut params_text = "".to_string();
 
 				let plen = params.len();
+
 				for i in 0..plen {
 					params_text += &format!("(param ${} {})", i, "i32");
 				}
@@ -93,7 +94,7 @@ impl AST {
 			&AST::Local(ref size) => {
 				format!("(get_local ${})", size)
 			}
-			&AST::BinaryOp(ref op, ref left, ref right) => ("(".to_string() + &left.as_t().to_string() + "." + &op.instr() + " " + &left.as_s() + " " + &right.as_s() + ")").to_string()
+			&AST::BinaryOp(ref op, ref left, ref right) => format!("({}.{} {} {})", left.as_t().to_string(), op.instr(), left.as_s(), right.as_s())
 		}
 	}
 }
