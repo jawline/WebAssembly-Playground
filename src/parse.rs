@@ -15,13 +15,28 @@ type Arg = String;
 enum Token {
 	Function,
 	LParen, RParen,
-	LBrace, RBrace,
-	Comma, Plus, Minus, Multiply, Divide, Mod,
+	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod,
 	ID(String),
 	Number(i32)
 }
 
 impl Token {
+
+	fn is_tok(c: char) -> Option<Token> {
+		match c {
+			'(' => Some(Token::LParen),
+			')' => Some(Token::RParen),
+			'{' => Some(Token::LBrace),
+			'}' => Some(Token::RBrace),
+			'+' => Some(Token::Plus),
+			'-' => Some(Token::Minus),
+			'*' => Some(Token::Multiply),
+			'/' => Some(Token::Divide),
+			'%' => Some(Token::Mod),
+			_ => { None }
+		}
+	}
+
 	fn op(&self) -> Option<BinaryOperation> {
 		match *self {
 			Token::Plus => Some(BinaryOperation::Add),
@@ -37,84 +52,26 @@ impl Token {
 fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	let name_regex: Regex = Regex::new("^[:alnum:]+").unwrap();
 	let num_literal_regex: Regex = Regex::new("^[:digit:]+").unwrap();
-	if cur.trim().starts_with("fn") {
-		if !peek {
-			*cur = cur.trim()[2..].to_string();
-		}
-		Ok(Token::Function)
-	} else if cur.trim().starts_with("(") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::LParen)
-	} else if cur.trim().starts_with(")") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::RParen)
-	} else if cur.trim().starts_with("+") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Plus)
-	} else if cur.trim().starts_with(",") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Comma)
-	} else if cur.trim().starts_with("%") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Mod)
-	} else if cur.trim().starts_with("-") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Minus)
-	} else if cur.trim().starts_with("*") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Multiply)
-	} else if cur.trim().starts_with("/") {
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-		Ok(Token::Divide)
-	} else if cur.trim().starts_with("{") {
-		
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
 
-		Ok(Token::LBrace)
-	} else if cur.trim().starts_with("}") {
-		
-		if !peek {
-			*cur = cur.trim()[1..].to_string();
-		}
-
-		Ok(Token::RBrace)
-	} else if let Some((first, second)) = num_literal_regex.find(cur.trim()) {
-		let num = Token::Number(cur.trim()[first..second].parse::<i32>().unwrap()); //TODO: Ignore parsing error potential here, could it ever happen (I dont think so)
-
-		if !peek {
-			*cur = cur.trim()[second..].to_string();
-		}
-
-		Ok(num)
-	} else if let Some((first, second)) = name_regex.find(cur.trim()) {
-		let name = Token::ID(cur.trim()[first..second].to_string());
-
-		if !peek {
-			*cur = cur.trim()[second..].to_string();
-		}
-
-		Ok(name)
+	let (tok, size) = if let Some(t) = Token::is_tok(cur.trim().chars().next().unwrap_or('\0')) {
+		(Ok(t), 1)
 	} else {
-		Err(("No token at ".to_string() + cur.trim()).to_string())
+		if cur.trim().starts_with("fn") {
+			(Ok(Token::Function), 2)
+		} else if let Some((first, second)) = num_literal_regex.find(cur.trim()) {
+			(Ok(Token::Number(cur.trim()[first..second].parse::<i32>().unwrap())), second)
+		} else if let Some((first, second)) = name_regex.find(cur.trim()) {
+			(Ok(Token::ID(cur.trim()[first..second].to_string())), second)
+		} else {
+			(Err(("No token at ".to_string() + cur.trim()).to_string()), 0)
+		}
+	};
+
+	if !peek {
+		*cur = cur.trim()[size..].to_string();
 	}
+
+	tok
 }
 
 fn parse_atom(cur: &mut String, args: &Vec<Arg>) -> Result<AST, String> {
