@@ -188,14 +188,14 @@ fn parse_arg(cur: &mut String) -> Result<String, String> {
 fn parse_args(cur: &mut String) -> Result<Args, String> {
 	let mut args = Args::new();
 
-	loop {
-		if peek!(Token::RParen, cur) {
-			expect!(Token::RParen, cur);
-			break;
-		} else {
-			args.push((try!(parse_arg(cur)), Type::Int32));
+	while !peek!(Token::RParen, cur) {
+		args.push((try!(parse_arg(cur)), Type::Int32));
+		if !(peek!(Token::RParen, cur) || peek!(Token::Comma, cur)) {
+			return Err(format!("Unexpected token near {}", cur));
 		}
 	}
+
+	expect!(Token::RParen, cur);
 
 	Ok(args)
 }
