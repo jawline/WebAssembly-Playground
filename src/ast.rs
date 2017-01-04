@@ -63,7 +63,7 @@ impl AST {
 			&AST::Function(_, _, ref body) => {
 				body.as_t()
 			},
-			&AST::Local(_, arg) => {
+			&AST::Local(_, ref arg) => {
 				arg.1
 			},
 			&AST::BinaryOp(_, ref left, ref right) => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
