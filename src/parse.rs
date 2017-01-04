@@ -202,7 +202,7 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 }
 
 //Top = Fn = Top Fn
-pub fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
+fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
 	expect!(Token::Function, cur);
 	let new_fn = try!(parse_fn(cur));
 
