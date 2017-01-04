@@ -139,10 +139,9 @@ fn parse_maybe_arith(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur, args));
 	let peek = try!(tok(cur, true));
 
+	//If the next token is an operation character then do Atom op ParseExpr(cur)
 	if peek.op().is_some() {
-		//Discard the peeked token
-		try!(tok(cur, false));
-		Ok(AST::BinaryOp(peek.op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
+		Ok(AST::BinaryOp(try!(tok(cur, false)).op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
 	} else {
 		Ok(a1)
 	}
