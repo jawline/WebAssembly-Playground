@@ -99,6 +99,15 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	tok
 }
 
+fn parse_fn_args(cur: &mut String, args: &Args) -> Result<Vec<AST>, String> {
+	let mut res = Vec::new();
+	while !peek!(Token::RParen, cur) {
+		res.push(try!(parse_expr(cur, args)));
+	}
+	expect!(Token::RParen, cur);
+	Ok(res)
+}
+
 fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let atom_tok = try!(tok(cur, false));
 	if let Token::Number(n) = atom_tok {
@@ -106,8 +115,8 @@ fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 	} else if let Token::ID(s) = atom_tok {
 		if peek!(Token::LParen, cur) { //Peek => Function call
 			expect!(Token::LParen, cur);
-			expect!(Token::RParen, cur);
-			Ok(AST::Call(s, Vec::new()))
+			let args = try!(parse_fn_args(cur, args));
+			Ok(AST::Call(s, args))
 		} else {
 			match args.iter().enumerate().find(|&r| (r.1).0 == s) {
 				Some((size, item)) => Ok(AST::Local(size, item.clone())),
