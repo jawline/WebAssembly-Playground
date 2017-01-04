@@ -148,7 +148,6 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	expect!(Token::LBrace, cur);
 
 	let parsed_expr = try!(parse_expr(cur, &args));
-
 	let new_fn = AST::Function(name, args, Box::new(parsed_expr));
 
 	expect!(Token::RBrace, cur);
@@ -156,7 +155,18 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	return Ok(new_fn);
 }
 
-pub fn parse_top(cur: &mut String) -> Result<AST, String> {
+//Top = Fn = Top Fn
+pub fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
 	expect!(Token::Function, cur);
-	parse_fn(cur)
+	let new_fn = try!(parse_fn(cur));
+
+	if try!(tok(cur, true)) == Token::Function {
+		let mut next_fn = try!(parse_top(cur));
+		next_fn.push(new_fn);
+		Ok(next_fn)
+	} else {
+		let mut root_fn = Vec::new();
+		root_fn.push(new_fn);
+		Ok(root_fn)
+	}
 }
