@@ -9,8 +9,6 @@ macro_rules! expect {
     };
 }
 
-type Arg = String;
-
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function,
@@ -50,7 +48,7 @@ impl Token {
 }
 
 fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
-	let name_regex: Regex = Regex::new("^[:alnum:]+").unwrap();
+	let name_regex: Regex = Regex::new("^([:alnum:]|_)+").unwrap();
 	let num_literal_regex: Regex = Regex::new("^[:digit:]+").unwrap();
 
 	//If its a single character token match in O(1)
@@ -77,12 +75,12 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	tok
 }
 
-fn parse_atom(cur: &mut String, args: &Vec<Arg>) -> Result<AST, String> {
+fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let atom_tok = try!(tok(cur, false));
 	if let Token::Number(n) = atom_tok {
 		Ok(AST::lit(n))
 	} else if let Token::ID(s) = atom_tok {
-		match args.iter().enumerate().find(|&r| r.1 == &s) {
+		match args.iter().enumerate().find(|&r| (r.1).0 == s) {
 			Some((size, _)) => Ok(AST::Local(size)),
 			None => Err(format!("No variable named {}", s))
 		}
@@ -92,7 +90,7 @@ fn parse_atom(cur: &mut String, args: &Vec<Arg>) -> Result<AST, String> {
 	}
 }
 
-fn parse_expr(cur: &mut String, args: &Vec<String>) -> Result<AST, String> {
+fn parse_expr(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur, args));
 	let peek = try!(tok(cur, true));
 
@@ -118,15 +116,15 @@ fn parse_arg(cur: &mut String) -> Result<String, String> {
 	Ok(name)
 }
 
-fn parse_args(cur: &mut String) -> Result<Vec<String>, String> {
-	let mut args = Vec::new();
+fn parse_args(cur: &mut String) -> Result<Args, String> {
+	let mut args = Args::new();
 
 	loop {
 		if try!(tok(cur, true)) == Token::RParen {
 			try!(tok(cur, false));
 			break;
 		} else {
-			args.push(try!(parse_arg(cur)));
+			args.push((try!(parse_arg(cur)), Type::Int32));
 		}
 	}
 

@@ -11,6 +11,9 @@ pub enum Type {
 	Int32
 }
 
+pub type Arg = (String, Type);
+pub type Args = Vec<Arg>;
+
 impl ToString for Type {
 	fn to_string(&self) -> String {
 		match *self {
@@ -39,7 +42,7 @@ impl BinaryOperation {
 
 pub enum AST {
 	Literal(Constant),
-	Function(String, Vec<String>, Box<AST>),
+	Function(String, Args, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
 	Local(usize)
 }
