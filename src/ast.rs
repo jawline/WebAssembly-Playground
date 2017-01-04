@@ -24,7 +24,7 @@ impl ToString for Type {
 
 #[derive(Clone, Copy)]
 pub enum BinaryOperation {
-	Add, Subtract, Multiply, Divide, Mod, GreaterThan, LessThan
+	Add, Subtract, Multiply, Divide, Mod, GreaterThan, LessThan, Equals
 }
 
 impl BinaryOperation {
@@ -35,6 +35,7 @@ impl BinaryOperation {
 			BinaryOperation::Multiply => "mul",
 			BinaryOperation::Divide => "div",
 			BinaryOperation::Mod => "mod",
+			BinaryOperation::Equals => "eq",
 			BinaryOperation::GreaterThan => "gt_s",
 			BinaryOperation::LessThan => "lt_s"
 		}.to_string()

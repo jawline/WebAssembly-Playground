@@ -37,7 +37,7 @@ macro_rules! peek {
 enum Token {
 	Function, If, Then, Else,
 	LParen, RParen, Comma,
-	LBrace, RBrace, Plus, Minus, Multiply, Divide, Mod, GreaterThan, LessThan,
+	LBrace, RBrace, Plus, Minus, Equals, Multiply, Divide, Mod, GreaterThan, LessThan,
 	ID(String),
 	Number(i32)
 }
@@ -50,6 +50,7 @@ impl Token {
 			')' => Some(Token::RParen),
 			'{' => Some(Token::LBrace),
 			'}' => Some(Token::RBrace),
+			'=' => Some(Token::Equals),
 			',' => Some(Token::Comma),
 			'+' => Some(Token::Plus),
 			'-' => Some(Token::Minus),
@@ -69,6 +70,7 @@ impl Token {
 			Token::Multiply => Some(BinaryOperation::Multiply),
 			Token::Divide => Some(BinaryOperation::Divide),
 			Token::Mod => Some(BinaryOperation::Mod),
+			Token::Equals => Some(BinaryOperation::Equals),
 			Token::GreaterThan => Some(BinaryOperation::GreaterThan),
 			Token::LessThan => Some(BinaryOperation::LessThan),
 			_ => None
