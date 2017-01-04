@@ -81,7 +81,7 @@ fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 		Ok(AST::lit(n))
 	} else if let Token::ID(s) = atom_tok {
 		match args.iter().enumerate().find(|&r| (r.1).0 == s) {
-			Some((size, _)) => Ok(AST::Local(size)),
+			Some((size, item)) => Ok(AST::Local(size, item.clone())),
 			None => Err(format!("No variable named {}", s))
 		}
 

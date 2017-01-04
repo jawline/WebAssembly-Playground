@@ -44,7 +44,7 @@ pub enum AST {
 	Literal(Constant),
 	Function(String, Args, Box<AST>),
 	BinaryOp(BinaryOperation, Box<AST>, Box<AST>),
-	Local(usize)
+	Local(usize, Arg)
 }
 
 impl AST {
@@ -63,9 +63,8 @@ impl AST {
 			&AST::Function(_, _, ref body) => {
 				body.as_t()
 			},
-			&AST::Local(_) => {
-				warn!("Local grab is not typesafe");
-				Type::Int32
+			&AST::Local(_, arg) => {
+				arg.1
 			},
 			&AST::BinaryOp(_, ref left, ref right) => if left.as_t() == right.as_t() { left.as_t() } else { Type::None }
 		}
@@ -94,7 +93,7 @@ impl AST {
 
 				format!("{} {}", exp, func)
 			},
-			&AST::Local(ref size) => {
+			&AST::Local(ref size, _) => {
 				format!("(get_local ${})", size)
 			}
 			&AST::BinaryOp(ref op, ref left, ref right) => format!("({}.{} {} {})", left.as_t().to_string(), op.instr(), left.as_s(), right.as_s())
