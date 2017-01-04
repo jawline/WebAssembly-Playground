@@ -9,6 +9,16 @@ macro_rules! expect {
     };
 }
 
+macro_rules! push {
+    ($a:expr, $b:expr) => {
+        {
+        	$a.push($b);
+        	$a
+    	}
+    };
+}
+
+
 macro_rules! peek {
 	($thet:expr, $cur:expr) => {
 		if let Ok(n) = tok($cur, true) {
@@ -228,13 +238,9 @@ fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
 	let new_fn = try!(parse_fn(cur));
 
 	if peek!(Token::Function, cur) {
-		let mut next_fn = try!(parse_top(cur));
-		next_fn.push(new_fn);
-		Ok(next_fn)
+		Ok(push!(try!(parse_top(cur)), new_fn))
 	} else {
-		let mut root_fn = Vec::new();
-		root_fn.push(new_fn);
-		Ok(root_fn)
+		Ok(vec!(new_fn))
 	}
 }
 
