@@ -9,6 +9,20 @@ macro_rules! expect {
     };
 }
 
+macro_rules! peek {
+	($thet:expr, $cur:expr) => {
+		if let Ok(n) = tok($cur, true) {
+			if n == $thet {
+				true
+			} else {
+				false
+			}
+		} else {
+			false
+		}
+    };
+}
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 enum Token {
 	Function, If, Then, Else,
@@ -90,11 +104,16 @@ fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
 	if let Token::Number(n) = atom_tok {
 		Ok(AST::lit(n))
 	} else if let Token::ID(s) = atom_tok {
-		match args.iter().enumerate().find(|&r| (r.1).0 == s) {
-			Some((size, item)) => Ok(AST::Local(size, item.clone())),
-			None => Err(format!("No variable named {}", s))
+		if peek!(Token::LParen, cur) { //Peek => Function call
+			expect!(Token::LParen, cur);
+			expect!(Token::RParen, cur);
+			Ok(AST::Call(s))
+		} else {
+			match args.iter().enumerate().find(|&r| (r.1).0 == s) {
+				Some((size, item)) => Ok(AST::Local(size, item.clone())),
+				None => Err(format!("No variable named {}", s))
+			}
 		}
-
 	} else {
 		Err(("unexpected token near ".to_string() + &cur).to_string())
 	}
@@ -183,17 +202,22 @@ fn parse_fn(cur: &mut String) -> Result<AST, String> {
 }
 
 //Top = Fn = Top Fn
-pub fn parse_top(cur: &mut String) -> Result<Vec<AST>, String> {
+pub fn parse_top(cur: &mut String) -> Result<Vec<Box<AST>>, String> {
 	expect!(Token::Function, cur);
 	let new_fn = try!(parse_fn(cur));
 
-	if let Ok(Token::Function) = tok(cur, true) {
+	if peek!(Token::Function, cur) {
 		let mut next_fn = try!(parse_top(cur));
-		next_fn.push(new_fn);
+		next_fn.push(Box::new(new_fn));
 		Ok(next_fn)
 	} else {
 		let mut root_fn = Vec::new();
-		root_fn.push(new_fn);
+		root_fn.push(Box::new(new_fn));
 		Ok(root_fn)
 	}
+}
+
+pub fn parse(cur: &mut String) -> Result<AST, String> {
+	let parsed = try!(parse_top(cur));
+	Ok(AST::Scope(parsed))
 }

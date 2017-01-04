@@ -2,7 +2,6 @@ extern crate regex;
 
 #[macro_use] mod warn;
 mod ast;
-mod writer;
 mod parse;
 
 use std::env;
@@ -20,7 +19,7 @@ fn main() {
 		f.read_to_string(&mut d).unwrap();
 
 	   	match parse::parse_top(&mut d) {
-	   		Ok(ast) => println!("{}", writer::to_s(&ast)),
+	   		Ok(ast) => println!("{}", ast.as_s()),
 	   		Err(msg) => println!("Err {}", msg)
 	   	};
 

@@ -5,6 +5,6 @@ fn abc(x) {
 		b()
 }
 
-fn b() {
+fn b(a) {
 	5
 }
