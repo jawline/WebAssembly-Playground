@@ -10,7 +10,7 @@ macro_rules! expect {
 }
 
 macro_rules! next {
-    ($thet:expr, $cur:expr) => {
+    ($cur:expr) => {
         try!(tok($cur, false))
     };
 }
@@ -25,6 +25,9 @@ macro_rules! push {
 }
 
 macro_rules! peek {
+	($cur:expr) => {
+		try!(tok($cur, true))
+    };
 	($thet:expr, $cur:expr) => {
 		if let Ok(n) = tok($cur, true) {
 			if n == $thet {
@@ -69,13 +72,13 @@ impl Token {
 	}
 
 	fn is_word_tok(cur: &str) -> Option<(Token, usize)> {
-		if cur.starts_with("fn ") {
+		if cur.starts_with("fn") {
 			Some((Token::Function, 2))
-		} else if cur.starts_with("if ") {
+		} else if cur.starts_with("if") {
 			Some((Token::If, 2))
-		} else if cur.starts_with("then ") {
+		} else if cur.starts_with("then") {
 			Some((Token::Then, 4))
-		} else if cur.starts_with("else ") {
+		} else if cur.starts_with("else") {
 			Some((Token::Else, 4))
 		} else {
 			None
@@ -151,7 +154,7 @@ fn parse_fn_args(cur: &mut String, args: &Args) -> Result<Vec<AST>, String> {
 }
 
 fn parse_atom(cur: &mut String, args: &Args) -> Result<AST, String> {
-	let atom_tok = try!(tok(cur, false));
+	let atom_tok = next!(cur);
 	if let Token::Number(n) = atom_tok {
 		Ok(AST::lit(n))
 	} else if let Token::ID(s) = atom_tok {
@@ -174,8 +177,8 @@ fn parse_maybe_arith(cur: &mut String, args: &Args) -> Result<AST, String> {
 	let a1 = try!(parse_atom(cur, args));
 
 	//If the next token is an operation character then do Atom op ParseExpr(cur)
-	if try!(tok(cur, true)).op().is_some() {
-		Ok(AST::BinaryOp(try!(tok(cur, false)).op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
+	if peek!(cur).op().is_some() {
+		Ok(AST::BinaryOp(next!(cur).op().unwrap(), Box::new(a1), Box::new(try!(parse_expr(cur, args)))))
 	} else {
 		Ok(a1)
 	}
@@ -185,7 +188,7 @@ fn parse_maybe_if(cur: &mut String, args: &Args) -> Result<AST, String> {
 
 	//if peek and If then expect If cnd Then truepath Else falsepath. Else parse arith
 	if peek!(Token::If, cur) {
-		try!(tok(cur, false)); //Discard If
+		expect!(Token::If, cur); //Discard If
 		let cnd = try!(parse_expr(cur, args));
 		expect!(Token::Then, cur);
 		let true_path = try!(parse_expr(cur, args));
@@ -212,7 +215,7 @@ fn parse_arg(cur: &mut String) -> Result<String, String> {
 
 	let name;
 
-	match try!(tok(cur, false)) {
+	match next!(cur) {
 		Token::ID(n) => { name = n; },
 		_ => { return Err("oh no".to_string()); }
 	}
@@ -238,7 +241,7 @@ fn parse_args(cur: &mut String) -> Result<Args, String> {
 fn parse_fn(cur: &mut String) -> Result<AST, String> {
 	let name;
 
-	match try!(tok(cur, false)) {
+	match next!(cur) {
 		Token::ID(x) => { name = x; },
 		_ => return Err(format!("expected ID near {:?}", cur))
 	}
