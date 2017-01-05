@@ -77,6 +77,19 @@ impl Token {
 		}
 	}
 
+	fn is_regex_tok(cur: &str) -> Option<(Token, usize)> {
+		let name_regex: Regex = Regex::new("^([:alnum:]|_)+").unwrap();
+		let num_literal_regex: Regex = Regex::new("^[:digit:]+").unwrap();
+
+		if let Some((first, second)) = num_literal_regex.find(cur) {
+			Some((Token::Number(cur[first..second].parse::<i32>().unwrap()), second))
+		} else if let Some((first, second)) = name_regex.find(cur) {
+			Some((Token::ID(cur[first..second].to_string()), second))
+		} else {
+			None
+		}
+	}
+
 	fn op(&self) -> Option<BinaryOperation> {
 		match *self {
 			Token::Plus => Some(BinaryOperation::Add),
@@ -93,8 +106,6 @@ impl Token {
 }
 
 fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
-	let name_regex: Regex = Regex::new("^([:alnum:]|_)+").unwrap();
-	let num_literal_regex: Regex = Regex::new("^[:digit:]+").unwrap();
 
 	//If its a single character token match in O(1)
 	let (tok, size) = if let Some(t) = Token::is_tok(cur.trim().chars().next().unwrap_or('\0')) {
@@ -105,10 +116,8 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 
 		if let Some((token, size)) = Token::is_word_tok(cur) {
 			(Ok(token), size)
-		} else if let Some((first, second)) = num_literal_regex.find(cur) {
-			(Ok(Token::Number(cur[first..second].parse::<i32>().unwrap())), second)
-		} else if let Some((first, second)) = name_regex.find(cur) {
-			(Ok(Token::ID(cur[first..second].to_string())), second)
+		} else if let Some((token, size)) = Token::is_word_tok(cur) {
+			(Ok(token), size)
 		} else {
 			(Err(("No token at ".to_string() + cur).to_string()), 0)
 		}
