@@ -18,8 +18,9 @@ macro_rules! next {
 macro_rules! push {
     ($a:expr, $b:expr) => {
         {
-        	$a.push($b);
-        	$a
+        	let mut t = $a;
+        	t.push($b);
+        	t
     	}
     };
 }

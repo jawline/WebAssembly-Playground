@@ -10,6 +10,12 @@
 		  return WebAssembly.compile(bytes).then(m => new WebAssembly.Instance(m, imports));
 		}
 
+		function test(c) {
+			let start = performance.now();
+			c();
+			console.log('T: ' + (performance.now() - start));
+		}
+
 		var oReq = new XMLHttpRequest();
 		oReq.open("GET", "/test.wasm", true);
 		oReq.responseType = "arraybuffer";

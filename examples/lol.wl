@@ -6,3 +6,10 @@ fn fibs(n) {
 	else
 		fibs(n-1) + fibs(n-2)
 }
+
+fn count(n) {
+	if n = 0 then
+		0
+	else
+		count(n - 1)
+}
