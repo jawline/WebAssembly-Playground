@@ -9,6 +9,12 @@ macro_rules! expect {
     };
 }
 
+macro_rules! next {
+    ($thet:expr, $cur:expr) => {
+        try!(tok($cur, false))
+    };
+}
+
 macro_rules! push {
     ($a:expr, $b:expr) => {
         {
@@ -17,7 +23,6 @@ macro_rules! push {
     	}
     };
 }
-
 
 macro_rules! peek {
 	($thet:expr, $cur:expr) => {
@@ -116,7 +121,7 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 
 		if let Some((token, size)) = Token::is_word_tok(cur) {
 			(Ok(token), size)
-		} else if let Some((token, size)) = Token::is_word_tok(cur) {
+		} else if let Some((token, size)) = Token::is_regex_tok(cur) {
 			(Ok(token), size)
 		} else {
 			(Err(("No token at ".to_string() + cur).to_string()), 0)
