@@ -16,13 +16,11 @@ macro_rules! next {
 }
 
 macro_rules! push {
-    ($a:expr, $b:expr) => {
-        {
-        	let mut t = $a;
-        	t.push($b);
-        	t
-    	}
-    };
+    ($a:expr, $b:expr) => {{
+    	let mut t = $a;
+       	t.push($b);
+       	t
+    }};
 }
 
 macro_rules! peek {
