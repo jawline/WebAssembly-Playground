@@ -63,6 +63,20 @@ impl Token {
 		}
 	}
 
+	fn is_word_tok(cur: &str) -> Option<(Token, usize)> {
+		if cur.starts_with("fn ") {
+			Some((Token::Function, 2))
+		} else if cur.starts_with("if ") {
+			Some((Token::If, 2))
+		} else if cur.starts_with("then ") {
+			Some((Token::Then, 4))
+		} else if cur.starts_with("else ") {
+			Some((Token::Else, 4))
+		} else {
+			None
+		}
+	}
+
 	fn op(&self) -> Option<BinaryOperation> {
 		match *self {
 			Token::Plus => Some(BinaryOperation::Add),
@@ -88,14 +102,9 @@ fn tok(cur: &mut String, peek: bool) -> Result<Token, String> {
 	} else {
 		//Section matches multi-character tokens
 		let cur = cur.trim(); //Block scope rename cur to trimmed cur
-		if cur.starts_with("fn") {
-			(Ok(Token::Function), 2)
-		} else if cur.starts_with("if") {
-			(Ok(Token::If), 2)
-		} else if cur.starts_with("then") {
-			(Ok(Token::Then), 4)
-		} else if cur.starts_with("else") {
-			(Ok(Token::Else), 4)
+
+		if let Some((token, size)) = Token::is_word_tok(cur) {
+			(Ok(token), size)
 		} else if let Some((first, second)) = num_literal_regex.find(cur) {
 			(Ok(Token::Number(cur[first..second].parse::<i32>().unwrap())), second)
 		} else if let Some((first, second)) = name_regex.find(cur) {
